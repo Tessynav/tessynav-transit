@@ -1,0 +1,25 @@
+# MapKoon transit data: rebuilt every Monday (and when started by hand from the Actions tab)
+name: Build transit data
+on:
+  schedule:
+    - cron: '17 7 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build from STM's schedule file
+        run: python build_transit.py
+      - name: Save the result
+        run: |
+          git config user.name "MapKoon bot"
+          git config user.email "bot@mapkoon.com"
+          git add -A data
+          git diff --cached --quiet || git commit -m "Transit data $(date -u +%Y-%m-%d)"
+          git push
